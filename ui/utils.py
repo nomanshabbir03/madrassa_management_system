@@ -24,8 +24,8 @@ URDU_NUMERALS = {
 
 # Urdu month names
 URDU_MONTHS = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون',
+    'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'
 ]
 
 def to_urdu_numerals(number):

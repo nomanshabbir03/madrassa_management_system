@@ -11,6 +11,7 @@ from modules.dashboard.dashboard_widget import DashboardWidget
 from modules.students.student_list import StudentList
 from modules.employees.employee_list import EmployeeList
 from modules.attendance.attendance_form import AttendanceWidget
+from modules.fees.fee_list import FeeList
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -169,9 +170,12 @@ class MainWindow(QMainWindow):
         self.attendance_widget = AttendanceWidget()
         self.content_stack.addWidget(self.attendance_widget)
         
+        # Add Fees List Widget at index 4
+        self.fees_widget = FeeList()
+        self.content_stack.addWidget(self.fees_widget)
+        
         # Create placeholder pages for remaining modules
         page_labels = [
-            "Fees - jald aa raha hai",
             "Atiyat - jald aa raha hai",
             "Imtihaanat - jald aa raha hai",
             "Reports - jald aa raha hai"
