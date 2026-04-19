@@ -35,6 +35,27 @@ class DonationList(QWidget):
         header_label.setStyleSheet("color: #D4A017; margin-bottom: 10px;")
         main_layout.addWidget(header_label)
         
+        # ٹیبل (Initialize early to avoid NoneType errors)
+        self.table = QTableWidget()
+        self.table.setFont(get_urdu_font(12))
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(["رسید نمبر", "عطیہ دہندہ", "رقم", "قسم", "طریقہ", "تاریخ", "رابطہ", "عمل"])
+        
+        # Configure table
+        header = self.table.horizontalHeader()
+        header.setFont(get_urdu_font(12, bold=True))
+        header.setSectionResizeMode(1, QHeaderView.Stretch)  # Donor name stretches
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Amount
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Type
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Method
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Date
+        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # Contact
+        header.setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Actions
+        
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
         # Filter bar
         filter_layout = QHBoxLayout()
         filter_layout.setSpacing(10)
@@ -152,28 +173,6 @@ class DonationList(QWidget):
         cards_layout.addWidget(self.month_card, 0, 3)
         
         main_layout.addLayout(cards_layout)
-        
-        # ٹیبل
-        self.table = QTableWidget()
-        self.table.setFont(get_urdu_font(12))
-        self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels(["رسید نمبر", "عطیہ دہندہ", "رقم", "قسم", "طریقہ", "تاریخ", "رابطہ", "عمل"])
-        
-        # Configure table
-        header = self.table.horizontalHeader()
-        header.setFont(get_urdu_font(12, bold=True))
-        header.setSectionResizeMode(1, QHeaderView.Stretch)  # Donor name stretches
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Amount
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Type
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Method
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Date
-        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # Contact
-        header.setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Actions
-        
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        
         main_layout.addWidget(self.table)
         
         # Footer with total
@@ -227,6 +226,9 @@ class DonationList(QWidget):
     
     def refresh_table(self):
         """Refresh table with current donations."""
+        if self.table is None:
+            return
+            
         clear_table(self.table)
         self.table.setRowCount(len(self.current_donations))
         

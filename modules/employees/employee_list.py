@@ -74,6 +74,28 @@ class EmployeeList(QWidget):
         
         layout.addLayout(header_layout)
         
+        # Create table early to avoid NoneType errors
+        self.table = QTableWidget()
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels([
+            "شمار", "ملازم کوڈ", "پورا نام", "والد کا نام", 
+            "عہدہ", "تنخواہ", "فون نمبر", "اعمال"
+        ])
+        
+        # Apply table styling
+        apply_table_style(self.table)
+        
+        # Set column widths
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # S.No
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Code
+        header.setSectionResizeMode(2, QHeaderView.Stretch)           # Name
+        header.setSectionResizeMode(3, QHeaderView.Stretch)           # Father Name
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Designation
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Salary
+        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # Phone
+        header.setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Actions
+
         # Search and filter section
         search_filter_layout = QHBoxLayout()
         
@@ -82,7 +104,6 @@ class EmployeeList(QWidget):
         self.search_input.setPlaceholderText("نام یا ملازم کوڈ سے تلاش کریں")
         self.search_input.setFont(get_urdu_font(14))
         self.search_input.setLayoutDirection(Qt.RightToLeft)
-        self.search_input.textChanged.connect(self.on_search)
         search_filter_layout.addWidget(self.search_input)
         
         # Designation filter
@@ -91,7 +112,6 @@ class EmployeeList(QWidget):
         self.designation_filter.addItems(designation_items)
         self.designation_filter.setFont(get_urdu_font(14))
         self.designation_filter.setLayoutDirection(Qt.RightToLeft)
-        self.designation_filter.currentTextChanged.connect(self.on_filter_change)
         search_filter_layout.addWidget(self.designation_filter)
         
         # Status filter
@@ -99,7 +119,6 @@ class EmployeeList(QWidget):
         self.status_filter.addItems(["فعال", "غیر فعال", "تمام"])
         self.status_filter.setFont(get_urdu_font(14))
         self.status_filter.setLayoutDirection(Qt.RightToLeft)
-        self.status_filter.currentTextChanged.connect(self.on_filter_change)
         search_filter_layout.addWidget(self.status_filter)
         
         # Refresh button
@@ -122,27 +141,10 @@ class EmployeeList(QWidget):
         
         layout.addLayout(search_filter_layout)
         
-        # Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "شمار", "ملازم کوڈ", "پورا نام", "والد کا نام", 
-            "عہدہ", "تنخواہ", "فون نمبر", "اعمال"
-        ])
-        
-        # Apply table styling
-        apply_table_style(self.table)
-        
-        # Set column widths
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # S.No
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Code
-        header.setSectionResizeMode(2, QHeaderView.Stretch)           # Name
-        header.setSectionResizeMode(3, QHeaderView.Stretch)           # Father Name
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Designation
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Salary
-        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # Phone
-        header.setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Actions
+        # Now connect signals
+        self.search_input.textChanged.connect(self.on_search)
+        self.designation_filter.currentTextChanged.connect(self.on_filter_change)
+        self.status_filter.currentTextChanged.connect(self.on_filter_change)
         
         layout.addWidget(self.table)
         

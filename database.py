@@ -124,9 +124,14 @@ def initialize_database():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     exam_name TEXT NOT NULL,
                     class_id INTEGER,
-                    date TEXT,
+                    subject_id INTEGER,
+                    exam_date TEXT,
                     total_marks INTEGER,
-                    FOREIGN KEY (class_id) REFERENCES classes (id)
+                    passing_marks INTEGER,
+                    exam_type TEXT,
+                    created_at TEXT,
+                    FOREIGN KEY (class_id) REFERENCES classes (id),
+                    FOREIGN KEY (subject_id) REFERENCES subjects (id)
                 )
             ''')
             
@@ -136,12 +141,13 @@ def initialize_database():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     exam_id INTEGER,
                     student_id INTEGER,
-                    subject_id INTEGER,
                     obtained_marks INTEGER,
+                    grade TEXT,
+                    status TEXT,
                     remarks TEXT,
+                    created_at TEXT,
                     FOREIGN KEY (exam_id) REFERENCES exams (id),
-                    FOREIGN KEY (student_id) REFERENCES students (id),
-                    FOREIGN KEY (subject_id) REFERENCES subjects (id)
+                    FOREIGN KEY (student_id) REFERENCES students (id)
                 )
             ''')
             

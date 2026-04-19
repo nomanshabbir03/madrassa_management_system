@@ -13,6 +13,7 @@ from modules.employees.employee_list import EmployeeList
 from modules.attendance.attendance_form import AttendanceWidget
 from modules.fees.fee_list import FeeList
 from modules.donations.donations_list import DonationList
+from modules.exams.exam_list import ExamList
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -178,10 +179,12 @@ class MainWindow(QMainWindow):
         # Add Donations List Widget at index 5
         self.donations_widget = DonationList()
         self.content_stack.addWidget(self.donations_widget)
+        # Add Exams List Widget at index 6
+        self.exams_widget = ExamList()
+        self.content_stack.addWidget(self.exams_widget)
         
         # Create placeholder pages for remaining modules
         page_labels = [
-            "Imtihaanat - jald aa raha hai",
             "Reports - jald aa raha hai"
         ]
         

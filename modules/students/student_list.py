@@ -60,7 +60,7 @@ class StudentList(QWidget):
         
         main_layout.addLayout(top_bar)
         
-        # Search/Filter bar
+        # Filter bar
         filter_frame = QFrame()
         filter_frame.setStyleSheet("""
             QFrame {
@@ -80,7 +80,6 @@ class StudentList(QWidget):
         self.search_input.setFont(get_urdu_font(14))
         self.search_input.setPlaceholderText("نام یا رجسٹریشن نمبر سے تلاش کریں")
         self.search_input.setMaximumWidth(300)
-        self.search_input.textChanged.connect(self.on_search)
         
         # Class filter
         class_label = QLabel("درجہ:")
@@ -89,8 +88,6 @@ class StudentList(QWidget):
         self.class_filter = QComboBox()
         self.class_filter.setFont(get_urdu_font(14))
         self.class_filter.setMaximumWidth(150)
-        self.class_filter.currentTextChanged.connect(self.on_filter_change)
-        self.load_classes()
         
         # Status filter
         status_label = QLabel("حالت:")
@@ -100,7 +97,6 @@ class StudentList(QWidget):
         self.status_filter.setFont(get_urdu_font(14))
         self.status_filter.setMaximumWidth(120)
         self.status_filter.addItems(["فعال", "غیر فعال", "تمام"])
-        self.status_filter.currentTextChanged.connect(self.on_filter_change)
         
         # Refresh button
         refresh_btn = QPushButton("تازہ کریں")
@@ -118,7 +114,7 @@ class StudentList(QWidget):
         
         main_layout.addWidget(filter_frame)
         
-        # Table
+        # Table (Initialize early to avoid NoneType errors)
         self.table = QTableWidget()
         self.table.setColumnCount(8)
         
@@ -148,6 +144,12 @@ class StudentList(QWidget):
         
         main_layout.addWidget(self.table)
         
+        # Now connect signals and load initial filter data
+        self.search_input.textChanged.connect(self.on_search)
+        self.class_filter.currentTextChanged.connect(self.on_filter_change)
+        self.status_filter.currentTextChanged.connect(self.on_filter_change)
+        self.load_classes()
+        
         # Status bar
         status_bar = QHBoxLayout()
         
@@ -165,6 +167,9 @@ class StudentList(QWidget):
     def load_students(self, search=None, class_filter=None, status_filter='active'):
         """Load students into table."""
         try:
+            if self.table is None:
+                return
+            
             students = self.model.get_all_students(search, class_filter, status_filter)
             
             # Clear table

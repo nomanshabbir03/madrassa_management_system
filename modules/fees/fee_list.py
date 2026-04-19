@@ -42,6 +42,35 @@ class FeeList(QWidget):
         header.setLayoutDirection(Qt.RightToLeft)
         main_layout.addWidget(header)
         
+        # QTableWidget with columns (right to left display)
+        self.table = QTableWidget()
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels([
+            "اعمال", "ادائیگی کی تاریخ", "ادائیگی کا طریقہ", "رقم", 
+            "سال", "ماہ", "طالب علم کا نام", "رسید نمبر"
+        ])
+        
+        # Table styling
+        self.table.setFont(get_urdu_font(12))
+        self.table.horizontalHeader().setFont(get_urdu_font(12, bold=True))
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Actions
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Date
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Amount
+        self.table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Receipt
+        
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
+        # Set row height
+        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setVisible(False)
+        
+        # RTL layout for table
+        self.table.setLayoutDirection(Qt.RightToLeft)
+        
         # Filter bar (horizontal)
         filter_bar = QHBoxLayout()
         filter_bar.setSpacing(10)
@@ -131,36 +160,6 @@ class FeeList(QWidget):
         
         filter_bar.addStretch()
         main_layout.addLayout(filter_bar)
-        
-        # QTableWidget with columns (right to left display)
-        self.table = QTableWidget()
-        self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels([
-            "اعمال", "ادائیگی کی تاریخ", "ادائیگی کا طریقہ", "رقم", 
-            "سال", "ماہ", "طالب علم کا نام", "رسید نمبر"
-        ])
-        
-        # Table styling
-        self.table.setFont(get_urdu_font(12))
-        self.table.horizontalHeader().setFont(get_urdu_font(12, bold=True))
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Actions
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Date
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Amount
-        self.table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeToContents)  # Receipt
-        
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        
-        # Set row height
-        self.table.verticalHeader().setDefaultSectionSize(40)
-        self.table.verticalHeader().setVisible(False)
-        
-        # RTL layout for table
-        self.table.setLayoutDirection(Qt.RightToLeft)
-        
         main_layout.addWidget(self.table)
         
         # Summary footer
@@ -239,6 +238,9 @@ class FeeList(QWidget):
     
     def refresh_table(self, fees):
         """Populate table with data, convert month numbers to Urdu names."""
+        if self.table is None:
+            return
+            
         # Clear table
         clear_table(self.table)
         

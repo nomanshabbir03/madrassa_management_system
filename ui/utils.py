@@ -170,7 +170,7 @@ def get_urdu_font(size=14, bold=False):
 
 def clear_table(table_widget):
     """Safely clear all rows from a QTableWidget."""
-    if table_widget.rowCount() > 0:
+    if table_widget is not None and hasattr(table_widget, 'rowCount') and table_widget.rowCount() > 0:
         table_widget.setRowCount(0)
 
 def set_table_item_urdu(table_widget, row, col, value):
