@@ -14,6 +14,7 @@ from modules.attendance.attendance_form import AttendanceWidget
 from modules.fees.fee_list import FeeList
 from modules.donations.donations_list import DonationList
 from modules.exams.exam_list import ExamList
+from modules.reports.report_list import ReportList
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -182,24 +183,10 @@ class MainWindow(QMainWindow):
         # Add Exams List Widget at index 6
         self.exams_widget = ExamList()
         self.content_stack.addWidget(self.exams_widget)
-        
-        # Create placeholder pages for remaining modules
-        page_labels = [
-            "Reports - jald aa raha hai"
-        ]
-        
-        for label in page_labels:
-            page = QWidget()
-            page_layout = QVBoxLayout(page)
-            page_layout.setAlignment(Qt.AlignCenter)
-            
-            page_label = QLabel(label)
-            page_label.setAlignment(Qt.AlignCenter)
-            page_label.setFont(get_urdu_font(18, bold=True))
-            page_label.setStyleSheet(f"color: {COLOR_SIDEBAR};")
-            
-            page_layout.addWidget(page_label)
-            self.content_stack.addWidget(page)
+        # Add Reports Widget at index 7
+        self.reports_widget = ReportList()
+        self.content_stack.addWidget(self.reports_widget)
+
         
         return self.content_stack
     
