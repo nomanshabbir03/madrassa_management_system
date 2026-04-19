@@ -88,10 +88,14 @@ def initialize_database():
                 CREATE TABLE IF NOT EXISTS donations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     donor_name TEXT NOT NULL,
+                    donor_contact TEXT,
                     amount REAL NOT NULL,
-                    date TEXT NOT NULL,
-                    purpose TEXT,
-                    remarks TEXT
+                    donation_type TEXT,
+                    payment_method TEXT,
+                    donation_date TEXT NOT NULL,
+                    receipt_number TEXT UNIQUE,
+                    notes TEXT,
+                    created_at TEXT
                 )
             ''')
             
