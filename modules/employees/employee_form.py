@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, 
     QComboBox, QDateEdit, QDoubleSpinBox, QPushButton, QFrame, QScrollArea, 
-    QSizePolicy
+    QSizePolicy, QShortcut
 )
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QFont
-from ui.utils import get_urdu_font, show_error, show_success, validate_phone, validate_cnic, validate_required
+from PyQt5.QtGui import QFont, QKeySequence
+from ui.utils import get_urdu_font, show_error, show_success, validate_phone, validate_cnic, validate_required, set_field_error
 from ui.styles import COLOR_ACCENT, COLOR_SIDEBAR
 from .employee_model import EmployeeModel
 
@@ -23,6 +23,7 @@ class EmployeeForm(QWidget):
         
         # Setup UI
         self.setup_ui()
+        self.setup_shortcuts()
         
         # Load employee data if in edit mode
         if self.employee_id is not None:
@@ -180,14 +181,27 @@ class EmployeeForm(QWidget):
         scroll_area.setWidget(container)
         
         # Main layout
-        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll_area)
     
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_employee)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.cancel)
+    
     def validate_form(self):
         """Validate form inputs"""
+        # Reset errors
+        set_field_error(self.full_name_input, False)
+        set_field_error(self.cnic_input, False)
+        set_field_error(self.phone_input, False)
+        
         # Validate full name
         if not validate_required(self.full_name_input.text()):
+            set_field_error(self.full_name_input, True)
             show_error(self, "ملازم کا نام لازمی ہے")
             return False
         
@@ -199,13 +213,15 @@ class EmployeeForm(QWidget):
         # Validate CNIC if provided
         cnic_text = self.cnic_input.text().strip()
         if cnic_text and not validate_cnic(cnic_text):
-            show_error(self, "شناختی کارڈ نمبر غلط ہے")
+            set_field_error(self.cnic_input, True)
+            show_error(self, "شناختی کارڈ نمبر غلط ہے - XXXXX-XXXXXXX-X فارمیٹ درکار ہے")
             return False
         
         # Validate phone if provided
         phone_text = self.phone_input.text().strip()
         if phone_text and not validate_phone(phone_text):
-            show_error(self, "فون نمبر غلط ہے")
+            set_field_error(self.phone_input, True)
+            show_error(self, "فون نمبر غلط ہے - 03XX-XXXXXXX فارمیٹ درکار ہے")
             return False
         
         return True

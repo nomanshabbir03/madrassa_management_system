@@ -3,9 +3,9 @@ import subprocess
 from datetime import datetime
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QComboBox, QPushButton, QTabWidget, QDateEdit, 
-                             QSpinBox, QLineEdit, QFileDialog, QFrame)
+                             QSpinBox, QLineEdit, QFileDialog, QFrame, QShortcut)
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, to_urdu_numerals,
                      validate_required)
@@ -19,6 +19,7 @@ class ReportList(QWidget):
         self.generator = ReportGenerator()
         self.setLayoutDirection(Qt.RightToLeft)
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_initial_data()
 
     def setup_ui(self):
@@ -76,12 +77,17 @@ class ReportList(QWidget):
         
         main_layout.addWidget(self.tabs)
         
-        # Progress Label
+        # Status Label
         self.status_label = QLabel("")
         self.status_label.setFont(get_urdu_font(12))
+        self.status_label.setStyleSheet("color: #2D6A4F; font-weight: bold;")
         self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("color: #1B4332;")
         main_layout.addWidget(self.status_label)
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for reports."""
+        self.shortcut_focus = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_focus.activated.connect(lambda: self.tabs.setFocus())
 
     def _setup_student_tab(self):
         tab = QWidget()

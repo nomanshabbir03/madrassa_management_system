@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
                              QLabel, QLineEdit, QPushButton, QComboBox,
-                             QDateEdit, QSpinBox)
+                             QDateEdit, QSpinBox, QShortcut)
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
+from PyQt5.QtGui import QKeySequence
 from ui.utils import (get_urdu_font, show_error, show_success, 
-                     validate_required)
+                     validate_required, set_field_error)
 from .exam_model import ExamModel
 
 
@@ -18,6 +19,7 @@ class ExamForm(QWidget):
         self.is_edit_mode = exam_id is not None
         
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_initial_data()
         
         if self.is_edit_mode:
@@ -169,6 +171,14 @@ class ExamForm(QWidget):
         main_layout.addLayout(button_layout)
         main_layout.addStretch()
 
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_exam)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.close_form)
+
     def load_initial_data(self):
         """Populate class dropdown."""
         try:
@@ -237,15 +247,23 @@ class ExamForm(QWidget):
 
     def validate_form(self):
         """Validate form fields."""
+        # Reset errors
+        set_field_error(self.exam_name_input, False)
+        set_field_error(self.class_combo, False)
+        set_field_error(self.subject_combo, False)
+        
         if not validate_required(self.exam_name_input.text()):
+            set_field_error(self.exam_name_input, True)
             show_error(self, "امتحان کا نام ضروری ہے")
             return False
             
         if self.class_combo.currentData() is None:
+            set_field_error(self.class_combo, True)
             show_error(self, "کلاس کا انتخاب ضروری ہے")
             return False
             
         if self.subject_combo.currentData() is None:
+            set_field_error(self.subject_combo, True)
             show_error(self, "مضمون کا انتخاب ضروری ہے")
             return False
             

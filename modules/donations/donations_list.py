@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLabel, QLineEdit, QPushButton, QComboBox, QTableWidget,
                              QTableWidgetItem, QDateEdit, QHeaderView, QFrame,
-                             QSizePolicy, QAbstractItemView)
+                             QSizePolicy, QAbstractItemView, QShortcut)
 from PyQt5.QtCore import Qt, QDate, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, to_urdu_numerals,
                      format_date_urdu, clear_table, set_table_item_urdu, show_confirm)
@@ -18,6 +18,7 @@ class DonationList(QWidget):
         self.current_donations = []
         
         self.setup_ui()
+        self.setup_shortcuts()
         self.setLayoutDirection(Qt.RightToLeft)
         self.load_donations()
         self.update_summary_cards()
@@ -184,6 +185,14 @@ class DonationList(QWidget):
         footer_layout.addStretch()
         
         main_layout.addLayout(footer_layout)
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for donation list."""
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.activated.connect(self.on_add_donation)
+        
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.activated.connect(lambda: self.donor_filter.setFocus())
     
     def create_summary_card(self, title, value, color):
         """Create a summary card widget."""
@@ -236,154 +245,60 @@ class DonationList(QWidget):
         
         for row, donation in enumerate(self.current_donations):
             # Receipt number
-            set_table_item_urdu(self.table, row, 0, donation['receipt_number'] or '')
+            set_table_item_urdu(self.table, row, 0, str(donation['id']))
             
             # Donor name
-            set_table_item_urdu(self.table, row, 1, donation['donor_name'] or '')
+            set_table_item_urdu(self.table, row, 1, donation['donor_name'])
             
             # Amount
-            amount = donation['amount'] or 0
-            set_table_item_urdu(self.table, row, 2, f"{amount:.2f}")
-            total_amount += amount
+            amount_text = f"{to_urdu_numerals(donation['amount'])} روپے"
+            set_table_item_urdu(self.table, row, 2, amount_text)
+            total_amount += donation['amount']
             
             # Type
-            set_table_item_urdu(self.table, row, 3, donation['donation_type'] or '')
+            set_table_item_urdu(self.table, row, 3, donation['donation_type'])
             
-            # Method
-            set_table_item_urdu(self.table, row, 4, donation['payment_method'] or '')
+            # Payment method
+            set_table_item_urdu(self.table, row, 4, donation['payment_method'])
             
             # Date
-            date_str = donation['donation_date'] or ''
-            if date_str:
-                formatted_date = format_date_urdu(date_str)
-                set_table_item_urdu(self.table, row, 5, formatted_date)
-            else:
-                set_table_item_urdu(self.table, row, 5, '')
+            date_str = format_date_urdu(donation['donation_date'])
+            set_table_item_urdu(self.table, row, 5, date_str)
             
             # Contact
-            set_table_item_urdu(self.table, row, 6, donation['donor_contact'] or '')
+            set_table_item_urdu(self.table, row, 6, donation['donor_contact'] or "")
             
             # Actions
-            actions_widget = self.create_actions_widget(donation['id'])
+            actions_widget = QWidget()
+            actions_layout = QHBoxLayout()
+            actions_layout.setContentsMargins(0, 0, 0, 0)
+            actions_layout.setSpacing(5)
+            
+            view_btn = QPushButton("دیکھیں")
+            view_btn.setFont(get_urdu_font(10))
+            view_btn.setStyleSheet("background-color: #17A2B8; color: white; border: none; padding: 3px; border-radius: 3px;")
+            view_btn.clicked.connect(lambda checked, did=donation['id']: self.view_donation(did))
+            
+            edit_btn = QPushButton("ترمیم")
+            edit_btn.setFont(get_urdu_font(10))
+            edit_btn.setStyleSheet("background-color: #FFC107; color: black; border: none; padding: 3px; border-radius: 3px;")
+            edit_btn.clicked.connect(lambda checked, did=donation['id']: self.edit_donation(did))
+            
+            delete_btn = QPushButton("حذف")
+            delete_btn.setFont(get_urdu_font(10))
+            delete_btn.setStyleSheet("background-color: #DC3545; color: white; border: none; padding: 3px; border-radius: 3px;")
+            delete_btn.clicked.connect(lambda checked, did=donation['id']: self.delete_donation(did))
+            
+            actions_layout.addWidget(view_btn)
+            actions_layout.addWidget(edit_btn)
+            actions_layout.addWidget(delete_btn)
+            actions_widget.setLayout(actions_layout)
+            
             self.table.setCellWidget(row, 7, actions_widget)
         
         # Update total
-        self.total_label.setText(f"کل رقم: {to_urdu_numerals(f'{total_amount:.2f}')} روپے")
-    
-    def create_actions_widget(self, donation_id):
-        """Create actions widget for edit/delete buttons."""
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(5)
-        
-        # Edit button
-        edit_button = QPushButton("ترمیم")
-        edit_button.setFont(get_urdu_font(10))
-        edit_button.setStyleSheet("""
-            QPushButton {
-                background-color: #007BFF;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                border-radius: 3px;
-            }
-            QPushButton:hover {
-                background-color: #0056b3;
-            }
-        """)
-        edit_button.clicked.connect(lambda: self.on_edit_donation(donation_id))
-        
-        # Delete button
-        delete_button = QPushButton("حذف")
-        delete_button.setFont(get_urdu_font(10))
-        delete_button.setStyleSheet("""
-            QPushButton {
-                background-color: #DC3545;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                border-radius: 3px;
-            }
-            QPushButton:hover {
-                background-color: #c82333;
-            }
-        """)
-        delete_button.clicked.connect(lambda: self.on_delete_donation(donation_id))
-        
-        layout.addWidget(edit_button)
-        layout.addWidget(delete_button)
-        
-        return widget
-    
-    def apply_filters(self):
-        """Apply filters to donations list."""
-        try:
-            filters = {}
-            
-            # Donor name filter
-            donor_name = self.donor_filter.text().strip()
-            if donor_name:
-                filters['donor_name'] = donor_name
-            
-            # Type filter
-            donation_type = self.type_filter.currentText()
-            if donation_type != "All":
-                filters['donation_type'] = donation_type
-            
-            # Method filter
-            payment_method = self.method_filter.currentText()
-            if payment_method != "All":
-                filters['payment_method'] = payment_method
-            
-            # Date range filter
-            start_date = self.from_date.date().toString("yyyy-MM-dd")
-            end_date = self.to_date.date().toString("yyyy-MM-dd")
-            filters['date_range'] = (start_date, end_date)
-            
-            self.current_donations = self.model.get_all_donations(filters)
-            self.refresh_table()
-            self.update_summary_cards()
-            
-        except Exception as e:
-            show_error(self, f"فلٹر لگانے میں خرابی: {str(e)}")
-    
-    def on_add_donation(self):
-        """Open donation form for new donation."""
-        try:
-            form = DonationForm(parent=self)
-            form.donation_saved.connect(self.on_donation_saved)
-            form.exec_()
-        except Exception as e:
-            show_error(self, f"عطیہ فارم کھولنے میں خرابی: {str(e)}")
-    
-    def on_edit_donation(self, donation_id):
-        """Open donation form for editing."""
-        try:
-            form = DonationForm(donation_id=donation_id, parent=self)
-            form.donation_saved.connect(self.on_donation_saved)
-            form.exec_()
-        except Exception as e:
-            show_error(self, f"عطیہ فارم کھولنے میں خرابی: {str(e)}")
-    
-    def on_delete_donation(self, donation_id):
-        """Delete donation after confirmation."""
-        try:
-            if show_confirm(self, "کیا آپ واقعی اس عطیے کو حذف کرنا چاہتے ہیں؟"):
-                success = self.model.delete_donation(donation_id)
-                if success:
-                    show_success(self, "عطیہ کامیابی سے حذف ہوگیا")
-                    self.load_donations()
-                    self.update_summary_cards()
-                else:
-                    show_error(self, "عطیہ حذف کرنے میں ناکام")
-        except Exception as e:
-            show_error(self, f"عطیہ حذف کرنے میں خرابی: {str(e)}")
-    
-    def on_donation_saved(self, donation_id):
-        """Handle donation saved event."""
-        self.load_donations()
-        self.update_summary_cards()
+        self.total_label.setText(f"کل رقم: {to_urdu_numerals(total_amount)} روپے")
+        self.total_label.setStyleSheet("color: #28A745; font-weight: bold;")
     
     def update_summary_cards(self):
         """Update summary cards with current statistics."""
@@ -414,6 +329,104 @@ class DonationList(QWidget):
                 
         except Exception as e:
             print(f"Error updating summary cards: {e}")
+    
+    def apply_filters(self):
+        """Apply filters to donations list."""
+        try:
+            # Get filter values
+            donor_filter = self.donor_filter.text().strip()
+            type_filter = self.type_filter.currentText()
+            method_filter = self.method_filter.currentText()
+            from_date = self.from_date.date().toString("yyyy-MM-dd")
+            to_date = self.to_date.date().toString("yyyy-MM-dd")
+            
+            # Build filters dictionary
+            filters = {}
+            if donor_filter:
+                filters['donor_name'] = donor_filter
+            if type_filter != "تمام":
+                filters['donation_type'] = type_filter
+            if method_filter != "تمام":
+                filters['payment_method'] = method_filter
+            if from_date:
+                filters['date_from'] = from_date
+            if to_date:
+                filters['date_to'] = to_date
+            
+            # Load filtered donations
+            self.current_donations = self.model.get_all_donations(filters)
+            self.refresh_table()
+            self.update_summary_cards()
+            
+        except Exception as e:
+            show_error(self, f"فلٹرز لگانے میں خرابی: {str(e)}")
+    
+    def on_add_donation(self):
+        """Open DonationForm as dialog."""
+        dialog = DonationForm(self)
+        if dialog.exec_() == DonationForm.Accepted:
+            self.load_donations()
+            self.update_summary_cards()
+    
+    def view_donation(self, donation_id):
+        """View donation details."""
+        try:
+            donation = self.model.get_donation_by_id(donation_id)
+            if donation:
+                details = f"""
+                <b>رسید نمبر:</b> {donation['id']}<br>
+                <b>عطیہ دہندہ:</b> {donation['donor_name']}<br>
+                <b>رقم:</b> {to_urdu_numerals(donation['amount'])} روپے<br>
+                <b>قسم:</b> {donation['donation_type']}<br>
+                <b>طریقہ:</b> {donation['payment_method']}<br>
+                <b>تاریخ:</b> {format_date_urdu(donation['donation_date'])}<br>
+                <b>رابطہ:</b> {donation['donor_contact'] or 'نہیں'}<br>
+                <b>نوٹس:</b> {donation['notes'] or 'نہیں'}
+                """
+                
+                msg = QMessageBox(self)
+                msg.setWindowTitle("عطیہ تفصیل")
+                msg.setTextFormat(Qt.RichText)
+                msg.setText(details)
+                msg.setStandardButtons(QMessageBox.Ok)
+                msg.setFont(get_urdu_font(12))
+                msg.exec_()
+            else:
+                show_error(self, "عطیہ نہیں ملا")
+        except Exception as e:
+            show_error(self, f"عطیہ دیکھنے میں خرابی: {str(e)}")
+    
+    def edit_donation(self, donation_id):
+        """Edit donation."""
+        try:
+            donation = self.model.get_donation_by_id(donation_id)
+            if donation:
+                dialog = DonationForm(self, donation)
+                if dialog.exec_() == DonationForm.Accepted:
+                    self.load_donations()
+                    self.update_summary_cards()
+            else:
+                show_error(self, "عطیہ نہیں ملا")
+        except Exception as e:
+            show_error(self, f"عطیہ میں ترمیم کرنے میں خرابی: {str(e)}")
+    
+    def delete_donation(self, donation_id):
+        """Delete donation with confirmation."""
+        try:
+            if show_confirm(self, "کیا آپ واقعی یہ عطیہ حذف کرنا چاہتے ہیں؟"):
+                if self.model.delete_donation(donation_id):
+                    self.load_donations()
+                    self.update_summary_cards()
+                    show_success(self, "عطیہ کامیابی سے حذف کر دیا گیا")
+                else:
+                    show_error(self, "عطیہ حذف کرنے میں ناکامی")
+        except Exception as e:
+            show_error(self, f"عطیہ حذف کرنے میں خرابی: {str(e)}")
+    
+    def on_donation_saved(self, donation_id):
+        """Handle donation saved event."""
+        self.load_donations()
+        self.update_summary_cards()
     
     def closeEvent(self, event):
         """Handle close event."""

@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QComboBox, QTableWidget, 
                              QTableWidgetItem, QHeaderView, QFrame, 
-                             QAbstractItemView, QMessageBox, QDialog)
+                             QAbstractItemView, QMessageBox, QDialog, QShortcut)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, 
                       show_confirm, to_urdu_numerals, clear_table, 
@@ -25,6 +25,7 @@ class FeeList(QWidget):
         self.model = FeeModel()
         self.fee_form_dialog = None
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_fees()
     
     def setup_ui(self):
@@ -193,6 +194,14 @@ class FeeList(QWidget):
         # Set widget properties
         self.setLayoutDirection(Qt.RightToLeft)
         self.setFont(get_urdu_font(14))
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for fee list."""
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.activated.connect(self.on_add_fee)
+        
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.activated.connect(lambda: self.search_button.setFocus())
     
     def load_students_filter(self):
         """Load students into filter dropdown."""
@@ -234,7 +243,12 @@ class FeeList(QWidget):
         
         # Update total
         total = self.calculate_total(fees)
-        self.total_label.setText(f"{to_urdu_numerals(total)} Rs")
+        if len(fees) == 0:
+             self.total_label.setText("کوئی ریکارڈ نہیں ملا")
+             self.total_label.setStyleSheet("color: #DC3545; font-weight: bold;")
+        else:
+             self.total_label.setText(f"کل وصول شدہ: {to_urdu_numerals(total)} روپے")
+             self.total_label.setStyleSheet("color: #28a745; font-weight: bold;")
     
     def refresh_table(self, fees):
         """Populate table with data, convert month numbers to Urdu names."""

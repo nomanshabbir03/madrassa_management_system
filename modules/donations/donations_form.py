@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
                              QLabel, QLineEdit, QTextEdit, QPushButton, QComboBox,
-                             QCompleter)
+                             QCompleter, QShortcut)
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QIntValidator, QDoubleValidator
+from PyQt5.QtGui import QFont, QIntValidator, QDoubleValidator, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, to_urdu_numerals, 
-                     validate_required, validate_phone)
+                     validate_required, validate_phone, set_field_error)
 from .donations_model import DonationModel
 
 
@@ -20,6 +20,7 @@ class DonationForm(QWidget):
         self.is_edit_mode = donation_id is not None
         
         self.setup_ui()
+        self.setup_shortcuts()
         self.setLayoutDirection(Qt.RightToLeft)
         
         if self.is_edit_mode:
@@ -177,31 +178,49 @@ class DonationForm(QWidget):
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.completer.activated.connect(self.auto_fill_contact)
         self.donor_name_input.setCompleter(self.completer)
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_donation)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.close_form)
     
     def validate_form(self):
-        """فارم فیلڈز کی توثیق کریں"""
+        """Validate form fields."""
+        # Reset errors
+        set_field_error(self.donor_name_input, False)
+        set_field_error(self.amount_input, False)
+        set_field_error(self.contact_input, False)
+        
         errors = []
         
-        # عطیہ دہندہ کا نام کی توثیق کریں
+        # Donor name
         if not validate_required(self.donor_name_input.text()):
+            set_field_error(self.donor_name_input, True)
             errors.append("عطیہ دہندہ کا نام ضروری ہے")
         
-        # رقم کی توثیق کریں
+        # Amount
         amount_text = self.amount_input.text().strip()
         if not validate_required(amount_text):
+            set_field_error(self.amount_input, True)
             errors.append("رقم ضروری ہے")
         else:
             try:
                 amount = float(amount_text)
                 if amount <= 0:
+                    set_field_error(self.amount_input, True)
                     errors.append("رقم صفر سے زیادہ ہونی چاہیے")
             except ValueError:
+                set_field_error(self.amount_input, True)
                 errors.append("غلط رقم کی شکل")
         
-        # رابطہ نمبر کی توثیق کریں (اختیاری)
+        # Contact (optional)
         contact_text = self.contact_input.text().strip()
         if contact_text and not validate_phone(contact_text):
-            errors.append("غلط رابطہ نمبر کی شکل")
+            set_field_error(self.contact_input, True)
+            errors.append("غلط رابطہ نمبر کی شکل - 03XX-XXXXXXX فارمیٹ درکار ہے")
         
         if errors:
             show_error(self, "\n".join(errors))

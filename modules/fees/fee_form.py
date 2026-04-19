@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QGridLayout, QComboBox, QSpinBox, QLineEdit, 
-                             QPushButton, QTextEdit, QFrame)
+                             QPushButton, QTextEdit, QFrame, QShortcut)
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QIntValidator
+from PyQt5.QtGui import QFont, QIntValidator, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, 
                       to_urdu_numerals, validate_required, get_today_date)
@@ -24,6 +24,7 @@ class FeeForm(QWidget):
         super().__init__(parent)
         self.model = FeeModel()
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_students()
     
     def setup_ui(self):
@@ -243,9 +244,16 @@ class FeeForm(QWidget):
         main_layout.addLayout(buttons_layout)
         main_layout.addStretch()
         
-        # Set widget properties
         self.setLayoutDirection(Qt.RightToLeft)
         self.setFont(get_urdu_font(14))
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_fee)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.close_form)
     
     def load_students(self):
         """Populate student dropdown from database."""
@@ -291,22 +299,30 @@ class FeeForm(QWidget):
     
     def validate_form(self):
         """Check all required fields, show_error if invalid."""
+        # Reset errors
+        set_field_error(self.student_combo, False)
+        set_field_error(self.amount_input, False)
+        
         student_id = self.student_combo.currentData()
         if not student_id:
+            set_field_error(self.student_combo, True)
             show_error(self, "طالب علم کا انتخاب لازمی ہے")
             return False
         
         amount_text = self.amount_input.text().strip()
         if not amount_text:
+            set_field_error(self.amount_input, True)
             show_error(self, "رقم لازمی ہے")
             return False
         
         try:
             amount = float(amount_text)
             if amount <= 0:
+                set_field_error(self.amount_input, True)
                 show_error(self, "رقم صفر سے زیادہ ہونا چاہیے")
                 return False
         except ValueError:
+            set_field_error(self.amount_input, True)
             show_error(self, "غلط رقم کا فارمیٹ")
             return False
         

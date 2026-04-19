@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, 
                              QPushButton, QLabel, QLineEdit, QComboBox, QHeaderView, QAbstractItemView, 
-                             QFrame, QSizePolicy, QMessageBox)
+                             QFrame, QSizePolicy, QMessageBox, QShortcut)
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence
 from ui.utils import get_urdu_font, show_error, show_success, show_confirm, set_table_item_urdu, clear_table, to_urdu_numerals
 from ui.styles import apply_table_style, COLOR_SIDEBAR, COLOR_ACCENT, COLOR_ERROR
 from modules.students.student_model import StudentModel
@@ -17,9 +18,10 @@ class StudentList(QWidget):
         self.class_filter = None
         self.status_filter = None
         self.table = None
-        self.status_label = None
+        self.status_label = QLabel("")
         self.setLayoutDirection(Qt.RightToLeft)
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_students()
 
     def setup_ui(self):
@@ -164,6 +166,14 @@ class StudentList(QWidget):
         
         self.setLayout(main_layout)
 
+    def setup_shortcuts(self):
+        """Setup keyboard shortcuts for the student list."""
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.activated.connect(self.show_add_form)
+        
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.activated.connect(lambda: self.search_input.setFocus())
+
     def load_students(self, search=None, class_filter=None, status_filter='active'):
         """Load students into table."""
         try:
@@ -256,8 +266,13 @@ class StudentList(QWidget):
                 self.table.setCellWidget(row, 7, actions_widget)
             
             # Update status label
-            count_text = f"کل طلباء: {to_urdu_numerals(len(students))}"
-            self.status_label.setText(count_text)
+            if len(students) == 0:
+                self.status_label.setText("کوئی ریکارڈ نہیں ملا")
+                self.status_label.setStyleSheet("color: #DC3545; font-weight: bold;")
+            else:
+                count_text = f"کل طلباء: {to_urdu_numerals(len(students))}"
+                self.status_label.setText(count_text)
+                self.status_label.setStyleSheet("color: gray;")
             
         except Exception as e:
             show_error(self, str(e))

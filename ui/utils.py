@@ -10,16 +10,16 @@ from PyQt5.QtCore import Qt
 
 # Urdu numeral mapping
 URDU_NUMERALS = {
-    '0': '0',
-    '1': '1', 
-    '2': '2',
-    '3': '3',
-    '4': '4',
-    '5': '5',
-    '6': '6',
-    '7': '7',
-    '8': '8',
-    '9': '9'
+    '0': '۰',
+    '1': '۱', 
+    '2': '۲',
+    '3': '۳',
+    '4': '۴',
+    '5': '۵',
+    '6': '۶',
+    '7': '۷',
+    '8': '۸',
+    '9': '۹'
 }
 
 # Urdu month names
@@ -49,12 +49,14 @@ def get_today_date():
     return datetime.date.today().strftime("%Y-%m-%d")
 
 def format_date_urdu(date_str):
-    """Format date as DD/MM/YYYY for Urdu readability."""
+    """Format date as DD-MM-YYYY for Urdu readability."""
     try:
+        # Expected input: YYYY-MM-DD
         date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-        return date_obj.strftime("%d/%m/%Y")
+        formatted = date_obj.strftime("%d-%m-%Y")
+        return to_urdu_numerals(formatted)
     except ValueError:
-        return date_str
+        return to_urdu_numerals(date_str)
 
 def get_current_month_year():
     """Return current month and year as strings."""
@@ -107,11 +109,13 @@ def generate_employee_code(conn):
         return f"EMP-{current_year}-{random_digits}"
 
 def validate_phone(phone):
-    """Validate Pakistani phone number format (10-11 digits)."""
+    """Validate Pakistani phone number format (03XX-XXXXXXX)."""
     if not phone:
         return False
-    phone_digits = re.sub(r'[^\d]', '', phone)
-    return len(phone_digits) in [10, 11] and phone_digits.isdigit()
+    # Remove any dashes or spaces for counting
+    digits = re.sub(r'[^\d]', '', phone)
+    # Check if starts with 03 and has 11 digits
+    return digits.startswith("03") and len(digits) == 11
 
 def validate_cnic(cnic):
     """Validate Pakistani CNIC format (XXXXX-XXXXXXX-X)."""
@@ -127,6 +131,20 @@ def validate_required(value):
     if isinstance(value, str):
         return len(value.strip()) > 0
     return True
+
+def validate_email(email):
+    """Basic email validation."""
+    if not email:
+        return False
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+def set_field_error(widget, is_error=True):
+    """Set red border for validation errors."""
+    if is_error:
+        widget.setStyleSheet("border: 2px solid #DC3545;") # COLOR_ERROR
+    else:
+        widget.setStyleSheet("") # Reset to default stylesheet
 
 def show_error(parent, message):
     """Show error message dialog in Urdu."""

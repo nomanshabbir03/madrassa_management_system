@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, 
                              QPushButton, QLabel, QStackedWidget, QFrame, 
-                             QSizePolicy, QApplication)
+                             QSizePolicy, QApplication, QStatusBar, QShortcut)
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QFont, QScreen
+from PyQt5.QtGui import QFont, QScreen, QKeySequence
 
 from ui.styles import get_main_stylesheet, COLOR_SIDEBAR, COLOR_ACCENT, FONT_FAMILY
 from ui.utils import get_urdu_font
@@ -27,9 +27,19 @@ class MainWindow(QMainWindow):
         self.nav_buttons = []
         
         # Window setup
-        self.setWindowTitle("مدارسہ مینجمنٹ سسٹم")
+        self.setWindowTitle("جامعہ دارالعلوم - مدرسہ مینجمنٹ سسٹم")
         self.setMinimumSize(1200, 700)
         self.setLayoutDirection(Qt.RightToLeft)
+        
+        # Status Bar
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("خوش آمدید - نظام تیار ہے")
+        self.status_bar.setFont(get_urdu_font(12))
+        
+        # Global Shortcuts
+        self.refresh_shortcut = QShortcut(QKeySequence("F5"), self)
+        self.refresh_shortcut.activated.connect(self.refresh_current_module)
         
         # Setup UI
         self.setup_ui()
@@ -192,6 +202,11 @@ class MainWindow(QMainWindow):
     
     def navigate_to(self, index):
         """Navigate to the specified page index."""
+        # Update status bar
+        modules_urdu = ["مرکزی صفحہ", "طلباء", "ملازمین", "حاضری", "فیس", "عطیات", "امتحانات", "رپورٹس"]
+        if 0 <= index < len(modules_urdu):
+            self.status_bar.showMessage(f"ماڈیول: {modules_urdu[index]}")
+            
         # Refresh dashboard if navigating to index 0
         if index == 0:
             self.dashboard_widget.refresh()
@@ -209,6 +224,17 @@ class MainWindow(QMainWindow):
             # Refresh button styling
             self.style().unpolish(button)
             self.style().polish(button)
+            
+    def refresh_current_module(self):
+        """Refresh the active module's data."""
+        current_widget = self.content_stack.currentWidget()
+        # Look for common refresh/load methods
+        refresh_methods = ["refresh", "load_students", "load_employees", "load_donations", "load_attendance_list", "refresh_table", "load_initial_data"]
+        for method_name in refresh_methods:
+            if hasattr(current_widget, method_name):
+                getattr(current_widget, method_name)()
+                self.status_bar.showMessage("ڈیٹا تازہ کر دیا گیا", 3000)
+                break
     
     def apply_styles(self):
         """Apply the main stylesheet to the window."""

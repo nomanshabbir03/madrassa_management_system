@@ -8,6 +8,9 @@ def get_connection():
         db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'madrassa.db')
         conn = sqlite3.connect(db_path)
         conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA journal_mode = WAL")  # Performance optimization
+        conn.execute("PRAGMA synchronous = NORMAL") # Performance optimization
+        conn.row_factory = sqlite3.Row  # Access columns by name
         return conn
     except sqlite3.Error as e:
         print(f"Database connection error: {e}")
@@ -175,6 +178,14 @@ def initialize_database():
                             "INSERT INTO subjects (subject_name, class_id) VALUES (?, ?)",
                             (subject_name, class_id)
                         )
+            
+            # Create indexes for performance
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_name ON students(full_name)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_reg ON students(registration_number)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_employee_name ON employees(full_name)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_employee_code ON employees(employee_code)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_fee_student ON fees(student_id)")
             
             conn.commit()
             

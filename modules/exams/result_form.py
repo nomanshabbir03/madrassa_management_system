@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QTableWidget, QTableWidgetItem, 
-                             QHeaderView, QComboBox, QSpinBox, QLineEdit)
+                             QHeaderView, QComboBox, QSpinBox, QLineEdit, QShortcut)
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, 
                      to_urdu_numerals, clear_table)
@@ -22,6 +22,7 @@ class ResultForm(QWidget):
         self.exam_config = {} # total_marks, passing_marks
         
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_exams()
         
     def setup_ui(self):
@@ -112,6 +113,14 @@ class ResultForm(QWidget):
         button_layout.addWidget(self.close_btn)
         button_layout.addStretch()
         main_layout.addLayout(button_layout)
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_all_results)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.close_form)
 
     def load_exams(self):
         """Populate exam dropdown."""

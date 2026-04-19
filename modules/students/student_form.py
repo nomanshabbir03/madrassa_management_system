@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, 
                              QComboBox, QDateEdit, QPushButton, QFileDialog, QFrame, 
-                             QScrollArea, QSizePolicy)
-from PyQt5.QtGui import QFont, QPixmap
+                             QScrollArea, QSizePolicy, QShortcut)
+from PyQt5.QtGui import QFont, QPixmap, QKeySequence
 from PyQt5.QtCore import Qt, QDate
-from ui.utils import get_urdu_font, show_error, show_success, validate_phone, validate_required
+from ui.utils import get_urdu_font, show_error, show_success, validate_phone, validate_required, set_field_error
 from ui.styles import COLOR_ACCENT, COLOR_SIDEBAR
 from modules.students.student_model import StudentModel
 import os
@@ -18,6 +18,7 @@ class StudentForm(QWidget):
         self.photo_path = None
         self.setLayoutDirection(Qt.RightToLeft)
         self.setup_ui()
+        self.setup_shortcuts()
         
         if student_id is not None:
             self.load_student_data()
@@ -202,6 +203,14 @@ class StudentForm(QWidget):
         scroll_area.setWidget(scroll_widget)
         main_layout.addWidget(scroll_area)
 
+    def setup_shortcuts(self):
+        """Setup shortcuts for the form."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_student)
+        
+        self.shortcut_cancel = QShortcut(QKeySequence("Esc"), self)
+        self.shortcut_cancel.activated.connect(self.cancel)
+
     def load_classes(self):
         """Load classes into combo box."""
         try:
@@ -229,22 +238,30 @@ class StudentForm(QWidget):
 
     def validate_form(self):
         """Validate form fields."""
+        # Reset errors
+        set_field_error(self.full_name_edit, False)
+        set_field_error(self.class_combo, False)
+        set_field_error(self.phone_edit, False)
+        
         # Check full name
         full_name = self.full_name_edit.text().strip()
         if not validate_required(full_name):
+            set_field_error(self.full_name_edit, True)
             show_error(self, "طالب علم کا نام لازمی ہے")
             return False
         
         # Check class selection
         class_name = self.class_combo.currentText()
         if class_name == "درجہ انتخاب کریں" or not class_name.strip():
+            set_field_error(self.class_combo, True)
             show_error(self, "درجہ کا انتخاب لازمی ہے")
             return False
         
         # Check phone if provided
         phone = self.phone_edit.text().strip()
         if phone and not validate_phone(phone):
-            show_error(self, "فون نمبر غلط ہے - 10 یا 11 ہندسے درکار ہیں")
+            set_field_error(self.phone_edit, True)
+            show_error(self, "فون نمبر غلط ہے - 03XX-XXXXXXX فارمیٹ درکار ہے")
             return False
         
         return True

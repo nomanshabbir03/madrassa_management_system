@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox, 
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox,
-    QFrame, QStackedWidget
+    QFrame, QStackedWidget, QShortcut
 )
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QKeySequence
 from .employee_model import EmployeeModel
 from .employee_form import EmployeeForm
-from ui.utils import get_urdu_font, show_error, show_success
+from ui.utils import get_urdu_font, show_error, show_success, to_urdu_numerals
 from ui.styles import apply_table_style
 
 
@@ -31,6 +32,9 @@ class EmployeeList(QWidget):
         # Setup list view
         self.setup_list_view()
         self.stack.addWidget(self.list_widget)
+        
+        # Setup shortcuts
+        self.setup_shortcuts()
         
         # Load initial data
         self.load_employees()
@@ -148,11 +152,19 @@ class EmployeeList(QWidget):
         
         layout.addWidget(self.table)
         
-        # Status bar
+        # Status Label
         self.status_label = QLabel("کل ملازمین: 0")
         self.status_label.setFont(get_urdu_font(12))
-        self.status_label.setStyleSheet("color: #7f8c8d; padding: 5px;")
+        self.status_label.setStyleSheet("color: gray; padding: 5px;")
         layout.addWidget(self.status_label)
+    
+    def setup_shortcuts(self):
+        """Setup keyboard shortcuts for the employee list."""
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.activated.connect(self.show_add_form)
+        
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.activated.connect(lambda: self.search_input.setFocus())
     
     def load_employees(self):
         """Load employees into the table"""
@@ -297,7 +309,12 @@ class EmployeeList(QWidget):
             
             # Update status with safety check
             if hasattr(self, 'status_label') and self.status_label:
-                self.status_label.setText(f"کل ملازمین: {len(employees)}")
+                if len(employees) == 0:
+                    self.status_label.setText("کوئی ریکارڈ نہیں ملا")
+                    self.status_label.setStyleSheet("color: #DC3545; font-weight: bold; padding: 5px;")
+                else:
+                    self.status_label.setText(f"کل ملازمین: {to_urdu_numerals(len(employees))}")
+                    self.status_label.setStyleSheet("color: #7f8c8d; padding: 5px;")
             
         except Exception as e:
             show_error(self, f"ملازمین لوڈ کرنے میں خطا: {str(e)}")

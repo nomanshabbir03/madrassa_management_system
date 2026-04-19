@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QTableWidget, QTableWidgetItem, 
                              QHeaderView, QComboBox, QDateEdit, QFrame, 
-                             QGridLayout, QAbstractItemView, QMessageBox)
+                             QGridLayout, QAbstractItemView, QMessageBox, QShortcut)
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QKeySequence
 
 from ui.utils import (get_urdu_font, show_error, show_success, to_urdu_numerals, 
                      format_date_urdu, clear_table)
@@ -17,8 +17,8 @@ class ExamList(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.model = ExamModel()
-        
         self.setup_ui()
+        self.setup_shortcuts()
         self.load_classes()
         self.refresh_table()
         
@@ -142,6 +142,20 @@ class ExamList(QWidget):
         self.table.setColumnWidth(7, 200)
         
         main_layout.addWidget(self.table)
+        
+        # Status Label for empty state
+        self.status_label = QLabel("")
+        self.status_label.setFont(get_urdu_font(12))
+        self.status_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.status_label)
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for exam list."""
+        self.shortcut_new = QShortcut(QKeySequence("Ctrl+N"), self)
+        self.shortcut_new.activated.connect(self.on_add_exam)
+        
+        self.shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.shortcut_search.activated.connect(lambda: self.class_filter.setFocus())
 
     def create_summary_card(self, title, value, color):
         """Create a stylized summary card."""
@@ -245,6 +259,12 @@ class ExamList(QWidget):
                 actions_layout.addWidget(edit_btn)
                 actions_layout.addWidget(delete_btn)
                 self.table.setCellWidget(row, 7, actions_widget)
+                
+            if len(exams) == 0:
+                self.status_label.setText("کوئی ریکارڈ نہیں ملا")
+                self.status_label.setStyleSheet("color: #DC3545; font-weight: bold;")
+            else:
+                self.status_label.setText("")
                 
             self.update_summary_cards()
         except Exception as e:

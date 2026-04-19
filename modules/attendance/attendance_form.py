@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QComboBox, QPushButton, QTableWidget, QTableWidgetItem,
-                             QDateEdit, QHeaderView, QSpinBox)
+                             QDateEdit, QHeaderView, QSpinBox, QShortcut)
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 from .attendance_model import AttendanceModel
 from ui.utils import get_urdu_font, show_error, show_success, get_today_date
 from ui.styles import apply_table_style
@@ -15,6 +15,7 @@ class AttendanceWidget(QWidget):
         self.model = AttendanceModel()
         self.setLayoutDirection(Qt.RightToLeft)
         self.setup_ui()
+        self.setup_shortcuts()
     
     def setup_ui(self):
         """Setup the UI for attendance marking."""
@@ -219,6 +220,18 @@ class AttendanceWidget(QWidget):
         
         # Update summary
         self.update_summary()
+        
+        # Empty state msg
+        if len(persons) == 0:
+            show_error(self, "کوئی ریکارڈ نہیں ملا")
+
+    def setup_shortcuts(self):
+        """Setup shortcuts for attendance."""
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.activated.connect(self.save_attendance)
+        
+        self.shortcut_refresh = QShortcut(QKeySequence("F5"), self)
+        self.shortcut_refresh.activated.connect(self.load_attendance_list)
     
     def set_table_item(self, row, col, value):
         """Set table item with Urdu formatting."""
